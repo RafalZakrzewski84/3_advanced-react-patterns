@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { Component, useState } from 'react';
 import styles from './index.css';
 
 const initialState = {
@@ -7,12 +7,28 @@ const initialState = {
 	isClicked: false,
 };
 
-const MediumClap = () => {
+/** Higher order component */
+
+const withClapAnimation = (WrappedComponent) => {
+	class WithClapAnimation extends Component {
+		animate = () => {
+			console.log('component animated');
+		};
+		render() {
+			return <WrappedComponent {...this.props} animate={this.animate} />;
+		}
+	}
+
+	return WithClapAnimation;
+};
+
+const MediumClap = ({ animate }) => {
 	const MAX_USER_CLAP = 12;
 	const [clapState, setClapState] = useState(initialState);
 	const { count, totalCount, isClicked } = clapState;
 
 	const handleClapClick = () => {
+		animate();
 		setClapState((previousState) => ({
 			isClicked: true,
 			count: Math.min(previousState.count + 1, MAX_USER_CLAP),
@@ -58,4 +74,12 @@ const CountTotal = ({ totalCount }) => {
 	return <span className={styles.total}>{totalCount}</span>;
 };
 
-export default MediumClap;
+/**
+ * Usage of component
+ */
+const Usage = () => {
+	const AnimatedMediumClap = withClapAnimation(MediumClap);
+	return <AnimatedMediumClap />;
+};
+
+export default Usage;
