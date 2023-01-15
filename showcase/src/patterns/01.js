@@ -18,19 +18,22 @@ const withClapAnimation = (WrappedComponent) => {
 		};
 
 		componentDidMount() {
+			const timelineDuration = 300;
 			const scaleButton = new mojs.Html({
 				el: '#clap',
-				duration: 300,
+				duration: timelineDuration,
 				scale: { 1.3: 1 },
 				easing: mojs.easing.ease.out,
 			});
+
+			const clap = document.getElementById('clap');
+			clap.style.transform = 'scale(1,1)';
 
 			const newAnimationTimeline = this.animateTimeline.add(scaleButton);
 			this.setState({ animateTimeline: newAnimationTimeline });
 		}
 
 		render() {
-			console.log(this.state.animateTimeline);
 			return (
 				<WrappedComponent
 					{...this.props}
