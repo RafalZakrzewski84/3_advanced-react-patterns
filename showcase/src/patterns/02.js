@@ -1,4 +1,4 @@
-import React, { Component, useEffect, useState } from 'react';
+import React, { Component, useCallback, useEffect, useState } from 'react';
 import mojs from 'mo-js';
 import styles from './index.css';
 
@@ -95,7 +95,20 @@ const MediumClap = () => {
 	const [clapState, setClapState] = useState(initialState);
 	const { count, totalCount, isClicked } = clapState;
 
-	const animationTimeline = useClapAnimation();
+	const [refState, setRefState] = useState({});
+
+	//setRef without useCallback generated errors
+	const setRef = useCallback(() => {
+		(node) => {
+			console.log(node);
+			setRefState((prevRefState) => ({
+				...prevRefState,
+				[node.data.refkey]: node,
+			}));
+		};
+	}, []);
+
+	const animationTimeline = useClapAnimation({});
 
 	const handleClapClick = () => {
 		animationTimeline.replay();
@@ -110,7 +123,11 @@ const MediumClap = () => {
 	};
 
 	return (
-		<button id="clap" className={styles.clap} onClick={handleClapClick}>
+		<button
+			ref={setRef}
+			data-refkey="clapRef"
+			className={styles.clap}
+			onClick={handleClapClick}>
 			<ClapIcon isClicked={isClicked} />
 			<ClapCount count={count} />
 			<CountTotal totalCount={totalCount} />
@@ -136,17 +153,17 @@ const ClapIcon = ({ isClicked }) => {
 		</span>
 	);
 };
-const ClapCount = ({ count }) => {
+const ClapCount = ({ count, setRef }) => {
 	return (
-		<span id="clapCount" className={styles.count}>
+		<span ref={setRef} data-refkey="clapCountRef" className={styles.count}>
 			+{count}
 		</span>
 	);
 };
 
-const CountTotal = ({ totalCount }) => {
+const CountTotal = ({ totalCount, setRef }) => {
 	return (
-		<span id="clapCountTotal" className={styles.total}>
+		<span ref={setRef} data-refkey="clapTotalRef" className={styles.total}>
 			{totalCount}
 		</span>
 	);
