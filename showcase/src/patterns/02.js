@@ -1,4 +1,4 @@
-import React, { Component, useState } from 'react';
+import React, { Component, useEffect, useState } from 'react';
 import mojs from 'mo-js';
 import styles from './index.css';
 
@@ -8,105 +8,97 @@ const initialState = {
 	isClicked: false,
 };
 
-/** Higher order component */
+/**
+ * Custom hook for animation
+ */
+const useClapAnimation = () => {
+	const [animationTimeline, setAnimationTimeline] = useState(
+		() => new mojs.Timeline() //lazy invoking of initial state
+	);
 
-const withClapAnimation = (WrappedComponent) => {
-	class WithClapAnimation extends Component {
-		animateTimeline = new mojs.Timeline();
-		state = {
-			animateTimeline: this.animateTimeline,
-		};
+	useEffect(() => {
+		const timelineDuration = 300;
+		const scaleButton = new mojs.Html({
+			el: '#clap',
+			duration: timelineDuration,
+			scale: { 1.3: 1 },
+			easing: mojs.easing.ease.out,
+		});
 
-		componentDidMount() {
-			const timelineDuration = 300;
-			const scaleButton = new mojs.Html({
-				el: '#clap',
-				duration: timelineDuration,
-				scale: { 1.3: 1 },
-				easing: mojs.easing.ease.out,
-			});
+		const triangleBurst = new mojs.Burst({
+			parent: '#clap',
+			radius: { 50: 95 },
+			count: 5,
+			angle: 30,
+			duration: timelineDuration,
+			children: {
+				shape: 'polygon',
+				radius: { 6: 0 },
+				stroke: 'rgba(211,54,0,0.5',
+				strokeWidth: 2,
+				angle: 210,
+				speed: 0.2,
+				delay: 30,
+				easing: mojs.easing.bezier(0.1, 1, 0.3, 1),
+			},
+		});
 
-			const triangleBurst = new mojs.Burst({
-				parent: '#clap',
-				radius: { 50: 95 },
-				count: 5,
-				angle: 30,
-				duration: timelineDuration,
-				children: {
-					shape: 'polygon',
-					radius: { 6: 0 },
-					stroke: 'rgba(211,54,0,0.5',
-					strokeWidth: 2,
-					angle: 210,
-					speed: 0.2,
-					delay: 30,
-					easing: mojs.easing.bezier(0.1, 1, 0.3, 1),
-				},
-			});
+		const circleBurst = new mojs.Burst({
+			parent: '#clap',
+			radius: { 50: 75 },
+			angle: 25,
+			duration: timelineDuration,
+			children: {
+				shape: 'circle',
+				fill: 'rgba(149,165,166,0.5)',
+				delay: 30,
+				speed: 0.2,
+				radius: { 3: 0 },
+				easing: mojs.easing.bezier(0.1, 1, 0.3, 1),
+			},
+		});
 
-			const circleBurst = new mojs.Burst({
-				parent: '#clap',
-				radius: { 50: 75 },
-				angle: 25,
-				duration: timelineDuration,
-				children: {
-					shape: 'circle',
-					fill: 'rgba(149,165,166,0.5)',
-					delay: 30,
-					speed: 0.2,
-					radius: { 3: 0 },
-					easing: mojs.easing.bezier(0.1, 1, 0.3, 1),
-				},
-			});
+		const countAnimation = new mojs.Html({
+			el: '#clapCount',
+			opacity: { 0: 1 },
+			y: { 0: -30 },
+			duration: timelineDuration,
+		}).then({ opacity: { 1: 0 }, y: -80, delay: timelineDuration / 2 });
 
-			const countAnimation = new mojs.Html({
-				el: '#clapCount',
-				opacity: { 0: 1 },
-				y: { 0: -30 },
-				duration: timelineDuration,
-			}).then({ opacity: { 1: 0 }, y: -80, delay: timelineDuration / 2 });
+		const countTotalAnimation = new mojs.Html({
+			el: '#clapCountTotal',
+			opacity: { 0: 1 },
+			delay: (3 * timelineDuration) / 2,
+			duration: timelineDuration,
+			y: { 0: -3 },
+		});
 
-			const countTotalAnimation = new mojs.Html({
-				el: '#clapCountTotal',
-				opacity: { 0: 1 },
-				delay: (3 * timelineDuration) / 2,
-				duration: timelineDuration,
-				y: { 0: -3 },
-			});
+		const clap = document.getElementById('clap');
+		clap.style.transform = 'scale(1,1)';
 
-			const clap = document.getElementById('clap');
-			clap.style.transform = 'scale(1,1)';
+		const newAnimationTimeline = animationTimeline.add([
+			scaleButton,
+			countTotalAnimation,
+			countAnimation,
+			triangleBurst,
+			circleBurst,
+		]);
 
-			const newAnimationTimeline = this.animateTimeline.add([
-				scaleButton,
-				countTotalAnimation,
-				countAnimation,
-				triangleBurst,
-				circleBurst,
-			]);
-			this.setState({ animateTimeline: newAnimationTimeline });
-		}
+		setAnimationTimeline(newAnimationTimeline);
+	}, []);
 
-		render() {
-			return (
-				<WrappedComponent
-					{...this.props}
-					animateTimeline={this.state.animateTimeline}
-				/>
-			);
-		}
-	}
-
-	return WithClapAnimation;
+	return animationTimeline;
 };
 
-const MediumClap = ({ animateTimeline }) => {
+const MediumClap = () => {
 	const MAX_USER_CLAP = 12;
 	const [clapState, setClapState] = useState(initialState);
 	const { count, totalCount, isClicked } = clapState;
 
+	const animationTimeline = useClapAnimation();
+
 	const handleClapClick = () => {
-		animateTimeline.replay();
+		animationTimeline.replay();
 		setClapState((previousState) => ({
 			isClicked: true,
 			count: Math.min(previousState.count + 1, MAX_USER_CLAP),
@@ -164,8 +156,7 @@ const CountTotal = ({ totalCount }) => {
  * Usage of component
  */
 const Usage = () => {
-	const AnimatedMediumClap = withClapAnimation(MediumClap);
-	return <AnimatedMediumClap />;
+	return <MediumClap />;
 };
 
 export default Usage;
