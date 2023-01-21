@@ -1,4 +1,11 @@
-import React, { useCallback, useLayoutEffect, useState } from 'react';
+import React, {
+	useCallback,
+	useLayoutEffect,
+	useState,
+	createContext,
+	useMemo,
+	useContext,
+} from 'react';
 import mojs from 'mo-js';
 import styles from './index.css';
 
@@ -92,15 +99,17 @@ const useClapAnimation = ({ clapEl, clapCountEl, clapTotalEl }) => {
 			circleBurst,
 		]);
 
-		console.log('in animation hook', clapEl, clapCountEl, clapTotalEl);
-
 		setAnimationTimeline(newAnimationTimeline);
 	}, [clapEl, clapCountEl, clapTotalEl]);
 
 	return animationTimeline;
 };
 
-const MediumClap = () => {
+//context for providing props to children
+const mediumClapContext = createContext();
+const { Provider } = mediumClapContext;
+
+const MediumClap = ({ children }) => {
 	const MAX_USER_CLAP = 12;
 	const [clapState, setClapState] = useState(initialState);
 	const { count, totalCount, isClicked } = clapState;
@@ -109,7 +118,6 @@ const MediumClap = () => {
 
 	//setRef without useCallback generated errors
 	const setRef = useCallback((node) => {
-		console.log('node in callback', node);
 		setRefState((prevRefState) => ({
 			...prevRefState,
 			[node.dataset.refkey]: node,
@@ -134,17 +142,23 @@ const MediumClap = () => {
 		}));
 	};
 
+	const memoizedProviderValues = useMemo(
+		() => ({ ...clapState, setRef }),
+		[clapState, setRef]
+	);
+
 	return (
-		<button
-			ref={setRef}
-			data-refkey="clapRef"
-			data-description="clapButton"
-			className={styles.clap}
-			onClick={handleClapClick}>
-			<ClapIcon isClicked={isClicked} />
-			<ClapCount count={count} setRef={setRef} />
-			<CountTotal totalCount={totalCount} setRef={setRef} />
-		</button>
+		//provider comp is wrapping all inside MediumClap
+		<Provider value={memoizedProviderValues}>
+			<button
+				ref={setRef}
+				data-refkey="clapRef"
+				data-description="clapButton"
+				className={styles.clap}
+				onClick={handleClapClick}>
+				{children}
+			</button>
+		</Provider>
 	);
 };
 
@@ -153,7 +167,8 @@ const MediumClap = () => {
 Smaller Component used by <MediumClap />
 ==================================== **/
 
-const ClapIcon = ({ isClicked }) => {
+const ClapIcon = () => {
+	const { isClicked } = useContext(mediumClapContext);
 	return (
 		<span>
 			<svg
@@ -166,7 +181,8 @@ const ClapIcon = ({ isClicked }) => {
 		</span>
 	);
 };
-const ClapCount = ({ count, setRef }) => {
+const ClapCount = () => {
+	const { count, setRef } = useContext(mediumClapContext);
 	return (
 		<span
 			ref={setRef}
@@ -178,7 +194,8 @@ const ClapCount = ({ count, setRef }) => {
 	);
 };
 
-const CountTotal = ({ totalCount, setRef }) => {
+const CountTotal = () => {
+	const { totalCount, setRef } = useContext(mediumClapContext);
 	return (
 		<span
 			ref={setRef}
@@ -194,7 +211,13 @@ const CountTotal = ({ totalCount, setRef }) => {
  * Usage of component
  */
 const Usage = () => {
-	return <MediumClap />;
+	return (
+		<MediumClap>
+			<ClapIcon />
+			<ClapCount />
+			<CountTotal />
+		</MediumClap>
+	);
 };
 
 export default Usage;

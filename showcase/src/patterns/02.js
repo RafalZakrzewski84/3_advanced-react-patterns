@@ -92,7 +92,7 @@ const useClapAnimation = ({ clapEl, clapCountEl, clapTotalEl }) => {
 			circleBurst,
 		]);
 
-		console.log('in animation hook', clapEl, clapCountEl, clapTotalEl);
+		// console.log('in animation hook', clapEl, clapCountEl, clapTotalEl);
 
 		setAnimationTimeline(newAnimationTimeline);
 	}, [clapEl, clapCountEl, clapTotalEl]);
@@ -109,7 +109,7 @@ const MediumClap = () => {
 
 	//setRef without useCallback generated errors
 	const setRef = useCallback((node) => {
-		console.log('node in callback', node);
+		// console.log('node in callback', node);
 		setRefState((prevRefState) => ({
 			...prevRefState,
 			[node.dataset.refkey]: node,
