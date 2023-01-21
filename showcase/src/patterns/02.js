@@ -1,4 +1,4 @@
-import React, { Component, useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useState } from 'react';
 import mojs from 'mo-js';
 import styles from './index.css';
 
@@ -16,7 +16,11 @@ const useClapAnimation = ({ clapEl, clapCountEl, clapTotalEl }) => {
 		() => new mojs.Timeline() //lazy invoking of initial state
 	);
 
-	useEffect(() => {
+	useLayoutEffect(() => {
+		if (!clapEl || !clapCountEl || !clapTotalEl) {
+			return;
+		}
+
 		const timelineDuration = 300;
 		const scaleButton = new mojs.Html({
 			el: clapEl,
@@ -88,8 +92,10 @@ const useClapAnimation = ({ clapEl, clapCountEl, clapTotalEl }) => {
 			circleBurst,
 		]);
 
+		console.log('in animation hook', clapEl, clapCountEl, clapTotalEl);
+
 		setAnimationTimeline(newAnimationTimeline);
-	}, []);
+	}, [clapEl, clapCountEl, clapTotalEl]);
 
 	return animationTimeline;
 };
@@ -103,10 +109,10 @@ const MediumClap = () => {
 
 	//setRef without useCallback generated errors
 	const setRef = useCallback((node) => {
-		console.log(node);
+		console.log('node in callback', node);
 		setRefState((prevRefState) => ({
 			...prevRefState,
-			[node.data.refkey]: node,
+			[node.dataset.refkey]: node,
 		}));
 	}, []);
 
@@ -132,6 +138,7 @@ const MediumClap = () => {
 		<button
 			ref={setRef}
 			data-refkey="clapRef"
+			data-description="clapButton"
 			className={styles.clap}
 			onClick={handleClapClick}>
 			<ClapIcon isClicked={isClicked} />
@@ -161,7 +168,11 @@ const ClapIcon = ({ isClicked }) => {
 };
 const ClapCount = ({ count, setRef }) => {
 	return (
-		<span ref={setRef} data-refkey="clapCountRef" className={styles.count}>
+		<span
+			ref={setRef}
+			data-refkey="clapCountRef"
+			data-description="clapSpanCount"
+			className={styles.count}>
 			+{count}
 		</span>
 	);
@@ -169,7 +180,11 @@ const ClapCount = ({ count, setRef }) => {
 
 const CountTotal = ({ totalCount, setRef }) => {
 	return (
-		<span ref={setRef} data-refkey="clapTotalRef" className={styles.total}>
+		<span
+			ref={setRef}
+			data-refkey="clapTotalRef"
+			data-description="clapSpanTotal"
+			className={styles.total}>
 			{totalCount}
 		</span>
 	);
