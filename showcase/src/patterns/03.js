@@ -112,7 +112,7 @@ const { Provider } = mediumClapContext;
 const MediumClap = ({ children }) => {
 	const MAX_USER_CLAP = 12;
 	const [clapState, setClapState] = useState(initialState);
-	const { count, totalCount, isClicked } = clapState;
+	const { count } = clapState;
 
 	const [{ clapRef, clapCountRef, clapTotalRef }, setRefState] = useState({});
 
@@ -142,13 +142,14 @@ const MediumClap = ({ children }) => {
 		}));
 	};
 
+	//prepare values for children
 	const memoizedProviderValues = useMemo(
 		() => ({ ...clapState, setRef }),
 		[clapState, setRef]
 	);
 
 	return (
-		//provider comp is wrapping all inside MediumClap
+		//provider component is wrapping all inside MediumClap - children components
 		<Provider value={memoizedProviderValues}>
 			<button
 				ref={setRef}
@@ -168,6 +169,7 @@ Smaller Component used by <MediumClap />
 ==================================== **/
 
 const ClapIcon = () => {
+	//hook for taking values from context provider
 	const { isClicked } = useContext(mediumClapContext);
 	return (
 		<span>
@@ -211,6 +213,7 @@ const CountTotal = () => {
  * Usage of component
  */
 const Usage = () => {
+	//now medium clap is wapping children
 	return (
 		<MediumClap>
 			<ClapIcon />
