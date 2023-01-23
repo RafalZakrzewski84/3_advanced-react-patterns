@@ -6,6 +6,7 @@ import React, {
 	createContext,
 	useMemo,
 	useContext,
+	useRef,
 } from 'react';
 import mojs from 'mo-js';
 import styles from './index.css';
@@ -131,9 +132,16 @@ const MediumClap = ({ children, onClap }) => {
 		clapTotalEl: clapTotalRef,
 	});
 
-	//taking exposed state via a callback
+	//setting this value on first render to true
+	const mediumClapJustMounted = useRef(true);
+
+	//taking exposed state via a callback to usage component
 	useEffect(() => {
-		onClap && onClap(clapState);
+		if (!mediumClapJustMounted.current) {
+			//not invoked during first mounting
+			onClap && onClap(clapState);
+		}
+		mediumClapJustMounted.current = false;
 	}, [count]);
 
 	const handleClapClick = () => {
@@ -244,7 +252,10 @@ const Usage = () => {
 				<MediumClap.Count />
 				<MediumClap.Total />
 			</MediumClap>
-			<div className={styles.info}>{`You have clapped ${usageCount}`}</div>
+			{!!usageCount && (
+				<div
+					className={styles.info}>{`You have clapped ${usageCount} times`}</div>
+			)}
 		</div>
 	);
 };
