@@ -209,6 +209,16 @@ const CountTotal = () => {
 	);
 };
 
+//For exporting
+MediumClap.Icon = ClapIcon;
+MediumClap.Count = ClapCount;
+MediumClap.Total = CountTotal;
+
+//When importing:
+//import MediumClap from './MediumClap'
+//Before adding properties to MediumClap
+//import MediumClap, {ClapIcon, ClapCount, TotalCount} from './MediumClap'
+
 /**
  * Usage of component
  */
@@ -216,9 +226,9 @@ const Usage = () => {
 	//now medium clap is wapping children
 	return (
 		<MediumClap>
-			<ClapIcon />
-			<ClapCount />
-			<CountTotal />
+			<MediumClap.Icon />
+			<MediumClap.Count />
+			<MediumClap.Total />
 		</MediumClap>
 	);
 };
