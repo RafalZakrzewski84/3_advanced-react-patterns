@@ -1,5 +1,6 @@
 import React, {
 	useCallback,
+	useEffect,
 	useLayoutEffect,
 	useState,
 	createContext,
@@ -109,7 +110,7 @@ const useClapAnimation = ({ clapEl, clapCountEl, clapTotalEl }) => {
 const mediumClapContext = createContext();
 const { Provider } = mediumClapContext;
 
-const MediumClap = ({ children }) => {
+const MediumClap = ({ children, onClap }) => {
 	const MAX_USER_CLAP = 12;
 	const [clapState, setClapState] = useState(initialState);
 	const { count } = clapState;
@@ -129,6 +130,11 @@ const MediumClap = ({ children }) => {
 		clapCountEl: clapCountRef,
 		clapTotalEl: clapTotalRef,
 	});
+
+	//taking exposed state via a callback
+	useEffect(() => {
+		onClap && onClap(clapState);
+	}, [count]);
 
 	const handleClapClick = () => {
 		animationTimeline.replay();
@@ -223,13 +229,23 @@ MediumClap.Total = CountTotal;
  * Usage of component
  */
 const Usage = () => {
+	const [usageCount, setUsageCount] = useState(0);
+
+	//Exposing state via a callback
+	const handleClap = (clapState) => {
+		setUsageCount(clapState.count);
+	};
+
 	//now medium clap is wapping children
 	return (
-		<MediumClap>
-			<MediumClap.Icon />
-			<MediumClap.Count />
-			<MediumClap.Total />
-		</MediumClap>
+		<div style={{ width: '100%' }}>
+			<MediumClap onClap={handleClap}>
+				<MediumClap.Icon />
+				<MediumClap.Count />
+				<MediumClap.Total />
+			</MediumClap>
+			<div className={styles.info}>{`You have clapped ${usageCount}`}</div>
+		</div>
 	);
 };
 
