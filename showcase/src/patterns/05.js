@@ -111,7 +111,13 @@ const useClapAnimation = ({ clapEl, clapCountEl, clapTotalEl }) => {
 const mediumClapContext = createContext();
 const { Provider } = mediumClapContext;
 
-const MediumClap = ({ children, onClap, style: userStale = {}, className }) => {
+const MediumClap = ({
+	children,
+	values = null,
+	onClap,
+	style: userStale = {},
+	className,
+}) => {
 	const MAX_USER_CLAP = 12;
 	const [clapState, setClapState] = useState(initialState);
 	const { count } = clapState;
@@ -134,28 +140,40 @@ const MediumClap = ({ children, onClap, style: userStale = {}, className }) => {
 	const mediumClapJustMounted = useRef(true);
 
 	useEffect(() => {
-		if (!mediumClapJustMounted.current) {
-			//not invoked during first mounting
+		if (!mediumClapJustMounted.current && !isControlled) {
+			//not invoked during first mounting and if component is controlled
 			onClap && onClap(clapState);
 		}
 		mediumClapJustMounted.current = false;
-	}, [count]);
+	}, [count, onClap, isControlled]);
+
+	//component is controlled if user pass values and callback function
+	const isControlled = !!values && onClap;
 
 	const handleClapClick = () => {
 		animationTimeline.replay();
-		setClapState((previousState) => ({
-			isClicked: true,
-			count: Math.min(previousState.count + 1, MAX_USER_CLAP),
-			totalCount:
-				count < MAX_USER_CLAP
-					? previousState.totalCount + 1
-					: previousState.totalCount,
-		}));
+
+		//set state or use callback base on if component is controlled
+		isControlled
+			? onClap()
+			: setClapState((previousState) => ({
+					isClicked: true,
+					count: Math.min(previousState.count + 1, MAX_USER_CLAP),
+					totalCount:
+						count < MAX_USER_CLAP
+							? previousState.totalCount + 1
+							: previousState.totalCount,
+			  }));
 	};
 
+	//pass values or state to context provider base on if component is controlled
+	const getState = useCallback(
+		() => (isControlled ? values : clapState),
+		[isControlled, values, clapState]
+	);
 	const memoizedProviderValues = useMemo(
-		() => ({ ...clapState, setRef }),
-		[clapState, setRef]
+		() => ({ ...getState(), setRef }),
+		[getState, setRef]
 	);
 
 	const classNames = [styles.clap, className].join(' ').trim();
