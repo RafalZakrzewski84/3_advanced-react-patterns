@@ -118,7 +118,7 @@ const MediumClap = ({
 	style: userStale = {},
 	className,
 }) => {
-	const MAX_USER_CLAP = 12;
+	const MAX_USER_CLAP = 50;
 	const [clapState, setClapState] = useState(initialState);
 	const { count } = clapState;
 
@@ -254,24 +254,42 @@ MediumClap.Total = CountTotal;
 /**
  * Usage of component
  */
-const Usage = () => {
-	const [usageCount, setUsageCount] = useState(0);
+const INITIAL_STATE = {
+	count: 0,
+	totalCount: 2100,
+	isClicked: false,
+};
 
-	const handleClap = (clapState) => {
-		setUsageCount(clapState.count);
+const Usage = () => {
+	const MAX_USAGE_CLAP = 20;
+	const [state, setState] = useState(INITIAL_STATE);
+
+	const handleClap = () => {
+		setState(({ count, totalCount }) => ({
+			count: Math.min(count + 1, MAX_USAGE_CLAP),
+			totalCount: count < MAX_USAGE_CLAP ? totalCount + 1 : totalCount,
+			isClicked: true,
+		}));
 	};
 
 	return (
 		<div style={{ width: '100%' }}>
-			<MediumClap onClap={handleClap} className={userUsageStyles.clap}>
+			<MediumClap
+				values={state}
+				onClap={handleClap}
+				className={userUsageStyles.clap}>
 				<MediumClap.Icon className={userUsageStyles.icon} />
 				<MediumClap.Count className={userUsageStyles.count} />
 				<MediumClap.Total className={userUsageStyles.total} />
 			</MediumClap>
-			{!!usageCount && (
-				<div
-					className={styles.info}>{`You have clapped ${usageCount} times`}</div>
-			)}
+			<MediumClap
+				values={state}
+				onClap={handleClap}
+				className={userUsageStyles.clap}>
+				<MediumClap.Icon className={userUsageStyles.icon} />
+				<MediumClap.Count className={userUsageStyles.count} />
+				<MediumClap.Total className={userUsageStyles.total} />
+			</MediumClap>
 		</div>
 	);
 };
