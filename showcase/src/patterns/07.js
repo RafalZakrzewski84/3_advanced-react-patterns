@@ -129,7 +129,7 @@ const useDOMref = () => {
 const useClapState = (initialState = INITIAL_STATE) => {
 	const MAX_USER_CLAP = 12;
 	const [clapState, setClapState] = useState(initialState);
-	const { count, totalCount } = clapState;
+	const { count, totalCount, isClicked } = clapState;
 
 	const updateClapState = useCallback(() => {
 		setClapState(({ count, totalCount }) => ({
@@ -140,13 +140,18 @@ const useClapState = (initialState = INITIAL_STATE) => {
 	}, [count, totalCount]);
 
 	//prop collection for 'click'
+	//aria are accessibility props
 	const togglerProps = {
 		onClick: updateClapState,
+		'aria-pressed': isClicked,
 	};
 
 	//props collection for 'count'
 	const counterProps = {
 		count,
+		'aria-valuemax': MAX_USER_CLAP,
+		'aria-valuemin': 0,
+		'aria-valuenow': count,
 	};
 
 	return { clapState, updateClapState, togglerProps, counterProps };
