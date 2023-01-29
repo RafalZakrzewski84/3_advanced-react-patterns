@@ -190,6 +190,17 @@ const MediumClap = () => {
  *      🔰SubComponents
 Smaller Component used by <MediumClap />
 ==================================== **/
+const ClapContainer = ({ children, setRef, handleClick, ...restProps }) => {
+	return (
+		<button
+			ref={setRef}
+			className={styles.clap}
+			onClick={handleClick}
+			{...restProps}>
+			{children}
+		</button>
+	);
+};
 
 const ClapIcon = ({ isClicked }) => {
 	return (
@@ -204,25 +215,17 @@ const ClapIcon = ({ isClicked }) => {
 		</span>
 	);
 };
-const ClapCount = ({ count, setRef }) => {
+const ClapCount = ({ count, setRef, ...restProps }) => {
 	return (
-		<span
-			ref={setRef}
-			data-refkey="clapCountRef"
-			data-description="clapSpanCount"
-			className={styles.count}>
+		<span ref={setRef} className={styles.count} {...restProps}>
 			+{count}
 		</span>
 	);
 };
 
-const CountTotal = ({ totalCount, setRef }) => {
+const CountTotal = ({ totalCount, setRef, ...restProps }) => {
 	return (
-		<span
-			ref={setRef}
-			data-refkey="clapTotalRef"
-			data-description="clapSpanTotal"
-			className={styles.total}>
+		<span ref={setRef} className={styles.total} {...restProps}>
 			{totalCount}
 		</span>
 	);
@@ -232,7 +235,35 @@ const CountTotal = ({ totalCount, setRef }) => {
  * Usage of component
  */
 const Usage = () => {
-	return <MediumClap />;
+	const [clapState, updateClapState] = useClapState();
+	const { count, totalCount, isClicked } = clapState;
+
+	const [{ clapRef, clapCountRef, clapTotalRef }, setRef] = useDOMref();
+
+	const animationTimeline = useClapAnimation({
+		clapEl: clapRef,
+		clapCountEl: clapCountRef,
+		clapTotalEl: clapTotalRef,
+	});
+
+	useEffectAfterMount(() => {
+		animationTimeline.replay();
+	}, [count]);
+
+	return (
+		<ClapContainer
+			setRef={setRef}
+			handleClick={updateClapState}
+			data-refkey="clapRef">
+			<ClapIcon isClicked={isClicked} />
+			<ClapCount count={count} setRef={setRef} data-refkey="clapCountRef" />
+			<CountTotal
+				totalCount={totalCount}
+				setRef={setRef}
+				data-refkey="clapTotalRef"
+			/>
+		</ClapContainer>
+	);
 };
 
 export default Usage;
