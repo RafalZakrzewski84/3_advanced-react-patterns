@@ -139,7 +139,17 @@ const useClapState = (initialState = INITIAL_STATE) => {
 		}));
 	}, [count, totalCount]);
 
-	return [clapState, updateClapState];
+	//prop collection for 'click'
+	const togglerProps = {
+		onClick: updateClapState,
+	};
+
+	//props collection for 'count'
+	const counterProps = {
+		count,
+	};
+
+	return { clapState, updateClapState, togglerProps, counterProps };
 };
 
 /**
@@ -154,36 +164,6 @@ const useEffectAfterMount = (callback, dependency) => {
 		}
 		mediumClapJustMounted.current = false;
 	}, dependency);
-};
-
-const MediumClap = () => {
-	const [clapState, updateClapState] = useClapState();
-	const { count, totalCount, isClicked } = clapState;
-
-	const [{ clapRef, clapCountRef, clapTotalRef }, setRef] = useDOMref();
-
-	const animationTimeline = useClapAnimation({
-		clapEl: clapRef,
-		clapCountEl: clapCountRef,
-		clapTotalEl: clapTotalRef,
-	});
-
-	useEffectAfterMount(() => {
-		animationTimeline.replay();
-	}, [count]);
-
-	return (
-		<button
-			ref={setRef}
-			data-refkey="clapRef"
-			data-description="clapButton"
-			className={styles.clap}
-			onClick={updateClapState}>
-			<ClapIcon isClicked={isClicked} />
-			<ClapCount count={count} setRef={setRef} />
-			<CountTotal totalCount={totalCount} setRef={setRef} />
-		</button>
-	);
 };
 
 /** ====================================
@@ -235,7 +215,8 @@ const CountTotal = ({ totalCount, setRef, ...restProps }) => {
  * Usage of component
  */
 const Usage = () => {
-	const [clapState, updateClapState] = useClapState();
+	const { clapState, updateClapState, togglerProps, counterProps } =
+		useClapState();
 	const { count, totalCount, isClicked } = clapState;
 
 	const [{ clapRef, clapCountRef, clapTotalRef }, setRef] = useDOMref();
@@ -251,12 +232,9 @@ const Usage = () => {
 	}, [count]);
 
 	return (
-		<ClapContainer
-			setRef={setRef}
-			handleClick={updateClapState}
-			data-refkey="clapRef">
+		<ClapContainer setRef={setRef} data-refkey="clapRef" {...togglerProps}>
 			<ClapIcon isClicked={isClicked} />
-			<ClapCount count={count} setRef={setRef} data-refkey="clapCountRef" />
+			<ClapCount setRef={setRef} data-refkey="clapCountRef" {...counterProps} />
 			<CountTotal
 				totalCount={totalCount}
 				setRef={setRef}
