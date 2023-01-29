@@ -2,7 +2,7 @@ import React, { useCallback, useLayoutEffect, useState } from 'react';
 import mojs from 'mo-js';
 import styles from './index.css';
 
-const initialState = {
+const INITIAL_STATE = {
 	count: 0,
 	totalCount: 275,
 	isClicked: false,
@@ -113,13 +113,31 @@ const useDOMref = () => {
 		}));
 	}, []);
 
-	console.log(DOMref);
+	// console.log(DOMref);
 	return [DOMref, setRef];
 };
 
-const MediumClap = () => {
+/**
+ * Custom hook for useClapState
+ */
+const useClapState = (initialState = INITIAL_STATE) => {
 	const MAX_USER_CLAP = 12;
 	const [clapState, setClapState] = useState(initialState);
+	const { count, totalCount } = clapState;
+
+	const updateClapState = useCallback(() => {
+		setClapState(({ count, totalCount }) => ({
+			isClicked: true,
+			count: Math.min(count + 1, MAX_USER_CLAP),
+			totalCount: count < MAX_USER_CLAP ? totalCount + 1 : totalCount,
+		}));
+	}, [count, totalCount]);
+
+	return [clapState, updateClapState];
+};
+
+const MediumClap = () => {
+	const [clapState, updateClapState] = useClapState();
 	const { count, totalCount, isClicked } = clapState;
 
 	const [{ clapRef, clapCountRef, clapTotalRef }, setRef] = useDOMref();
@@ -132,14 +150,7 @@ const MediumClap = () => {
 
 	const handleClapClick = () => {
 		animationTimeline.replay();
-		setClapState((previousState) => ({
-			isClicked: true,
-			count: Math.min(previousState.count + 1, MAX_USER_CLAP),
-			totalCount:
-				count < MAX_USER_CLAP
-					? previousState.totalCount + 1
-					: previousState.totalCount,
-		}));
+		updateClapState();
 	};
 
 	return (
