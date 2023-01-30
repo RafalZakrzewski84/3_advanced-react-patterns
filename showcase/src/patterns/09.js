@@ -133,7 +133,7 @@ const callFncInSequence =
 	};
 
 const useClapState = (initialState = INITIAL_STATE) => {
-	const MAX_USER_CLAP = 12;
+	const MAX_USER_CLAP = 50;
 	const [clapState, setClapState] = useState(initialState);
 	const { count, totalCount, isClicked } = clapState;
 
@@ -207,6 +207,7 @@ const ClapIcon = ({ isClicked }) => {
 		</span>
 	);
 };
+
 const ClapCount = ({ count, setRef, ...restProps }) => {
 	return (
 		<span ref={setRef} className={styles.count} {...restProps}>
@@ -226,9 +227,16 @@ const CountTotal = ({ totalCount, setRef, ...restProps }) => {
 /**
  * Usage of component
  */
+
+const initialUserState = {
+	count: 20,
+	totalCount: 1000,
+	isClicked: true,
+};
+
 const Usage = () => {
-	const { clapState, updateClapState, getTogglerProps, getCounterProps } =
-		useClapState();
+	const { clapState, getTogglerProps, getCounterProps } =
+		useClapState(initialUserState);
 	const { count, totalCount, isClicked } = clapState;
 
 	const [{ clapRef, clapCountRef, clapTotalRef }, setRef] = useDOMref();
