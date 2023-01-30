@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 import mojs from 'mo-js';
 import styles from './index.css';
+import userStyles from './usage.css';
 
 const INITIAL_STATE = {
 	count: 0,
@@ -134,6 +135,10 @@ const callFncInSequence =
 
 const useClapState = (initialState = INITIAL_STATE) => {
 	const MAX_USER_CLAP = 50;
+
+	//set once during mounting component, we are sure initial state doesn't change
+	const userInitialState = useRef(initialState);
+
 	const [clapState, setClapState] = useState(initialState);
 	const { count, totalCount, isClicked } = clapState;
 
@@ -145,14 +150,18 @@ const useClapState = (initialState = INITIAL_STATE) => {
 		}));
 	}, [count, totalCount]);
 
-	//props getters
+	const reset = useCallback(() => {
+		setClapState(userInitialState.current);
+		//eslint-ignore if not pass dependency
+		//eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [setClapState]);
+
 	const getTogglerProps = ({ onClick, ...otherProps } = {}) => ({
 		onClick: callFncInSequence(updateClapState, onClick),
 		'aria-pressed': isClicked,
 		...otherProps,
 	});
 
-	//props getters
 	const getCounterProps = ({ ...otherProps } = {}) => ({
 		count,
 		'aria-valuemax': MAX_USER_CLAP,
@@ -161,7 +170,13 @@ const useClapState = (initialState = INITIAL_STATE) => {
 		...otherProps,
 	});
 
-	return { clapState, updateClapState, getTogglerProps, getCounterProps };
+	return {
+		clapState,
+		updateClapState,
+		getTogglerProps,
+		getCounterProps,
+		reset,
+	};
 };
 
 /**
@@ -235,7 +250,7 @@ const initialUserState = {
 };
 
 const Usage = () => {
-	const { clapState, getTogglerProps, getCounterProps } =
+	const { clapState, getTogglerProps, getCounterProps, reset } =
 		useClapState(initialUserState);
 	const { count, totalCount, isClicked } = clapState;
 
@@ -256,22 +271,34 @@ const Usage = () => {
 	};
 
 	return (
-		<ClapContainer
-			setRef={setRef}
-			data-refkey="clapRef"
-			{...getTogglerProps({ onClick: handleClick })}>
-			<ClapIcon isClicked={isClicked} />
-			<ClapCount
-				setRef={setRef}
-				data-refkey="clapCountRef"
-				{...getCounterProps()}
-			/>
-			<CountTotal
-				totalCount={totalCount}
-				setRef={setRef}
-				data-refkey="clapTotalRef"
-			/>
-		</ClapContainer>
+		<div>
+			<div>
+				<ClapContainer
+					setRef={setRef}
+					data-refkey="clapRef"
+					{...getTogglerProps({ onClick: handleClick })}>
+					<ClapIcon isClicked={isClicked} />
+					<ClapCount
+						setRef={setRef}
+						data-refkey="clapCountRef"
+						{...getCounterProps()}
+					/>
+					<CountTotal
+						totalCount={totalCount}
+						setRef={setRef}
+						data-refkey="clapTotalRef"
+					/>
+				</ClapContainer>
+			</div>
+			<section>
+				<button onClick={reset} className={userStyles.resetBtn}>
+					reset
+				</button>
+				<pre className={userStyles.resetMsg}>
+					{JSON.stringify({ count, totalCount, isClicked })}
+				</pre>
+			</section>
+		</div>
 	);
 };
 
