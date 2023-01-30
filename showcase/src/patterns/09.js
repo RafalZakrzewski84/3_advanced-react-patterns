@@ -125,6 +125,17 @@ const useDOMref = () => {
 };
 
 /**
+ * Custom hook for getting previous prop/state
+ */
+const usePrevious = (value) => {
+	const ref = useRef();
+	useEffect(() => {
+		ref.current = value;
+	});
+	return ref.current;
+};
+
+/**
  * Custom hook for useClapState
  */
 const callFncInSequence =
@@ -150,11 +161,16 @@ const useClapState = (initialState = INITIAL_STATE) => {
 		}));
 	}, [count, totalCount]);
 
+	const resetRef = useRef(0);
+	const prevCount = usePrevious(count);
 	const reset = useCallback(() => {
-		setClapState(userInitialState.current);
+		if (prevCount !== count) {
+			setClapState(userInitialState.current);
+			resetRef.current++;
+		}
 		//eslint-ignore if not pass dependency
 		//eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [setClapState]);
+	}, [prevCount, count, setClapState]);
 
 	const getTogglerProps = ({ onClick, ...otherProps } = {}) => ({
 		onClick: callFncInSequence(updateClapState, onClick),
@@ -176,6 +192,7 @@ const useClapState = (initialState = INITIAL_STATE) => {
 		getTogglerProps,
 		getCounterProps,
 		reset,
+		resetDep: resetRef.current,
 	};
 };
 
@@ -250,7 +267,7 @@ const initialUserState = {
 };
 
 const Usage = () => {
-	const { clapState, getTogglerProps, getCounterProps, reset } =
+	const { clapState, getTogglerProps, getCounterProps, reset, resetDep } =
 		useClapState(initialUserState);
 	const { count, totalCount, isClicked } = clapState;
 
@@ -265,6 +282,18 @@ const Usage = () => {
 	useEffectAfterMount(() => {
 		animationTimeline.replay();
 	}, [count]);
+
+	//fake server update
+	const [uploadingReset, setUpload] = useState(false);
+	useEffectAfterMount(() => {
+		setUpload(true);
+
+		const id = setTimeout(() => {
+			setUpload(false);
+		}, 3000);
+
+		return () => clearTimeout(id);
+	}, [resetDep]);
 
 	const handleClick = () => {
 		console.log('CLICKED!!!');
@@ -296,6 +325,9 @@ const Usage = () => {
 				</button>
 				<pre className={userStyles.resetMsg}>
 					{JSON.stringify({ count, totalCount, isClicked })}
+				</pre>
+				<pre className={userStyles.resetMsg}>
+					{uploadingReset ? `uploading reset ${resetDep} ...` : ''}
 				</pre>
 			</section>
 		</div>
