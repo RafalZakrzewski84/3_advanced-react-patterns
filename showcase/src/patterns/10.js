@@ -146,7 +146,7 @@ const callFncInSequence =
 	};
 
 const MAX_USER_CLAP = 50;
-const reducer = ({ count, totalCount }, { type, payload }) => {
+const internalReducer = ({ count, totalCount }, { type, payload }) => {
 	switch (type) {
 		case 'clap':
 			return {
@@ -163,12 +163,15 @@ const reducer = ({ count, totalCount }, { type, payload }) => {
 	}
 };
 
-const useClapState = (initialState = INITIAL_STATE) => {
+const useClapState = (
+	initialState = INITIAL_STATE,
+	reducer = internalReducer
+) => {
 	//set once during mounting component, we are sure initial state doesn't change
 	const userInitialState = useRef(initialState);
 
 	const [clapState, dispatch] = useReducer(reducer, initialState);
-	const { count, totalCount, isClicked } = clapState;
+	const { count, isClicked } = clapState;
 
 	const updateClapState = () => dispatch({ type: 'clap' });
 
@@ -272,14 +275,31 @@ const CountTotal = ({ totalCount, setRef, ...restProps }) => {
  */
 
 const initialUserState = {
-	count: 20,
+	count: 0,
 	totalCount: 1000,
 	isClicked: true,
 };
 
 const Usage = () => {
+	const reducer = ({ count, totalCount }, { type, payload }) => {
+		switch (type) {
+			case 'clap':
+				return {
+					isClicked: true,
+					count: Math.min(count + 1, 10),
+					totalCount: count < 10 ? totalCount + 1 : totalCount,
+				};
+
+			case 'reset':
+				return payload;
+
+			default:
+				break;
+		}
+	};
+
 	const { clapState, getTogglerProps, getCounterProps, reset, resetDep } =
-		useClapState(initialUserState);
+		useClapState(initialUserState, reducer);
 	const { count, totalCount, isClicked } = clapState;
 
 	const [{ clapRef, clapCountRef, clapTotalRef }, setRef] = useDOMref();
