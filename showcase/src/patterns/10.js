@@ -4,6 +4,7 @@ import React, {
 	useState,
 	useEffect,
 	useRef,
+	useReducer,
 } from 'react';
 import mojs from 'mo-js';
 import styles from './index.css';
@@ -144,33 +145,43 @@ const callFncInSequence =
 		fns.forEach((fn) => fn && fn(...args));
 	};
 
-const useClapState = (initialState = INITIAL_STATE) => {
-	const MAX_USER_CLAP = 50;
+const MAX_USER_CLAP = 50;
+const reducer = ({ count, totalCount }, { type, payload }) => {
+	switch (type) {
+		case 'clap':
+			return {
+				isClicked: true,
+				count: Math.min(count + 1, MAX_USER_CLAP),
+				totalCount: count < MAX_USER_CLAP ? totalCount + 1 : totalCount,
+			};
 
+		case 'reset':
+			return payload;
+
+		default:
+			break;
+	}
+};
+
+const useClapState = (initialState = INITIAL_STATE) => {
 	//set once during mounting component, we are sure initial state doesn't change
 	const userInitialState = useRef(initialState);
 
-	const [clapState, setClapState] = useState(initialState);
+	const [clapState, dispatch] = useReducer(reducer, initialState);
 	const { count, totalCount, isClicked } = clapState;
 
-	const updateClapState = useCallback(() => {
-		setClapState(({ count, totalCount }) => ({
-			isClicked: true,
-			count: Math.min(count + 1, MAX_USER_CLAP),
-			totalCount: count < MAX_USER_CLAP ? totalCount + 1 : totalCount,
-		}));
-	}, [count, totalCount]);
+	const updateClapState = () => dispatch({ type: 'clap' });
 
 	const resetRef = useRef(0);
 	const prevCount = usePrevious(count);
 	const reset = useCallback(() => {
 		if (prevCount !== count) {
-			setClapState(userInitialState.current);
+			dispatch({ type: 'reset', payload: userInitialState.current });
 			resetRef.current++;
 		}
 		//eslint-ignore if not pass dependency
 		//eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [prevCount, count, setClapState]);
+	}, [prevCount, count, dispatch]);
 
 	const getTogglerProps = ({ onClick, ...otherProps } = {}) => ({
 		onClick: callFncInSequence(updateClapState, onClick),
