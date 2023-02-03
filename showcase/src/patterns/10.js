@@ -209,6 +209,13 @@ const useClapState = (
 		resetDep: resetRef.current,
 	};
 };
+// Exposing the internal reducer and types
+// in project would be exported
+useClapState.reducer = internalReducer;
+useClapState.types = {
+	clap: 'clap',
+	reset: 'reset',
+};
 
 /**
  * Custom hook useEffectAfterMount
@@ -281,21 +288,13 @@ const initialUserState = {
 };
 
 const Usage = () => {
-	const reducer = ({ count, totalCount }, { type, payload }) => {
-		switch (type) {
-			case 'clap':
-				return {
-					isClicked: true,
-					count: Math.min(count + 1, 10),
-					totalCount: count < 10 ? totalCount + 1 : totalCount,
-				};
+	const [timesClapped, setTimesClapped] = useState(0);
+	const isClappedTooMuch = timesClapped >= 7;
 
-			case 'reset':
-				return payload;
-
-			default:
-				break;
-		}
+	const reducer = (state, action) => {
+		if (action.type === useClapState.types.clap && isClappedTooMuch)
+			return state;
+		return useClapState.reducer(state, action);
 	};
 
 	const { clapState, getTogglerProps, getCounterProps, reset, resetDep } =
@@ -318,7 +317,7 @@ const Usage = () => {
 	const [uploadingReset, setUpload] = useState(false);
 	useEffectAfterMount(() => {
 		setUpload(true);
-
+		setTimesClapped(0);
 		const id = setTimeout(() => {
 			setUpload(false);
 		}, 3000);
@@ -327,6 +326,7 @@ const Usage = () => {
 	}, [resetDep]);
 
 	const handleClick = () => {
+		setTimesClapped((t) => t + 1);
 		console.log('CLICKED!!!');
 	};
 
@@ -355,11 +355,12 @@ const Usage = () => {
 					reset
 				</button>
 				<pre className={userStyles.resetMsg}>
-					{JSON.stringify({ count, totalCount, isClicked })}
+					{JSON.stringify({ count, totalCount, timesClapped })}
 				</pre>
 				<pre className={userStyles.resetMsg}>
 					{uploadingReset ? `uploading reset ${resetDep} ...` : ''}
 				</pre>
+				<pre>{isClappedTooMuch ? 'claped too much' : ''}</pre>
 			</section>
 		</div>
 	);
